@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Funko Store — Anime Collection</title>
+<style>
+  /* ===================== SISTEMA DE ESTILOS (tokens) ===================== */
+  :root{
+    --navy:#0F2340;
+    --navy-dark:#0A1930;
+    --teal:#0B7B8A;
+    --coral:#E8524A;
+    --gold:#F5A623;
+    --bg:#FFFFFF;
+    --bg-alt:#EAF2F5;
+    --text:#222222;
+    --grey:#666666;
+    --border:#CCCCCC;
+    --radius-sm:6px;
+    --radius-md:12px;
+    --shadow-card:0 2px 12px rgba(0,0,0,.08);
+    --shadow-hover:0 4px 20px rgba(0,0,0,.12);
+    --transition:200ms ease-in-out;
+    --space-1:4px; --space-2:8px; --space-3:16px; --space-4:24px; --space-6:48px;
+  }
+  *{ box-sizing:border-box; }
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family: Arial, "Inter", sans-serif; font-size:16px;
+  }
+  h1,h2,h3{ font-family:"Playfair Display", Georgia, serif; color:var(--navy); margin:0; }
+  a{ color:inherit; text-decoration:none; }
+  button{ font-family:inherit; cursor:pointer; }
+
+  /* ---------- Botones (componente Button) ---------- */
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:6px;
+    font-weight:600; font-size:.9rem; padding:10px 20px;
+    border-radius:var(--radius-sm); border:none; transition:all var(--transition);
+  }
+  .btn-primary{ background:var(--navy); color:#fff; }
+  .btn-primary:hover{ background:var(--navy-dark); box-shadow:var(--shadow-hover); }
+  .btn-secondary{ background:transparent; color:var(--teal); border:1px solid var(--teal); }
+  .btn-secondary:hover{ background:rgba(11,123,138,.1); }
+  .btn:disabled{ background:#ccc!important; color:#fff!important; border:none!important; cursor:not-allowed; box-shadow:none!important; }
+  .btn-block{ width:100%; }
+  .btn:focus-visible{ outline:2px solid var(--coral); outline-offset:2px; }
+
+  /* ---------- Badge ---------- */
+  .badge{ display:inline-block; font-size:.7rem; font-weight:700; padding:3px 8px; border-radius:20px; }
+  .badge-chase{ background:var(--gold); color:#5c3d00; }
+  .badge-exclusive{ background:var(--teal); color:#fff; }
+  .badge-nostock{ background:#e0e0e0; color:#555; }
+
+  /* ---------- Navbar ---------- */
+  header.navbar{
+    background:var(--navy); color:#fff; padding:14px 24px;
+    display:flex; align-items:center; gap:20px; flex-wrap:wrap;
+    position:sticky; top:0; z-index:20;
+  }
+  .logo{ font-family:"Playfair Display",serif; font-size:1.3rem; font-weight:700; white-space:nowrap; }
+  .searchbox{ flex:1; min-width:160px; display:flex; }
+  .searchbox input{
+    width:100%; border:none; border-radius:20px 0 0 20px; padding:9px 14px; font-size:.85rem;
+  }
+  .searchbox button{
+    border:none; background:var(--teal); color:#fff; border-radius:0 20px 20px 0; padding:0 14px;
+  }
+  .nav-icons{ display:flex; align-items:center; gap:16px; font-size:.9rem; }
+  .nav-icons .icon-btn{ background:none; border:none; color:#fff; font-size:1.1rem; position:relative; }
+  .cart-count{
+    position:absolute; top:-8px; right:-10px; background:var(--coral); color:#fff;
+    font-size:.65rem; border-radius:50%; width:18px; height:18px; display:flex; align-items:center; justify-content:center;
+  }
+  nav.categories{
+    display:flex; gap:10px; padding:10px 24px; background:var(--bg-alt); flex-wrap:wrap; overflow-x:auto;
+  }
+  nav.categories button{
+    background:#fff; border:1px solid var(--border); border-radius:20px; padding:6px 14px; font-size:.82rem; white-space:nowrap;
+    transition:all var(--transition);
+  }
+  nav.categories button.active, nav.categories button:hover{ background:var(--navy); color:#fff; border-color:var(--navy); }
+
+  main{ max-width:1100px; margin:0 auto; padding:28px 20px 80px; min-height:60vh; }
+
+  /* ---------- Hero (Home) ---------- */
+  .hero{
+    background:linear-gradient(135deg,var(--navy),var(--teal)); color:#fff; border-radius:var(--radius-md);
+    padding:48px 32px; text-align:center; margin-bottom:var(--space-6);
+  }
+  .hero h1{ color:#fff; font-size:2rem; margin-bottom:8px; }
+  .hero p{ opacity:.9; margin-bottom:20px; }
+  .hero .btn-primary{ background:var(--coral); }
+  .hero .btn-primary:hover{ background:#c93f38; }
+
+  /* ---------- ProductCard ---------- */
+  .grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:var(--space-3); }
+  .card{
+    background:#fff; border-radius:var(--radius-md); box-shadow:var(--shadow-card);
+    overflow:hidden; transition:box-shadow var(--transition), transform var(--transition);
+    display:flex; flex-direction:column; position:relative;
+  }
+  .card:hover{ box-shadow:var(--shadow-hover); transform:translateY(-3px); }
+  .card .thumb{
+    height:150px; background:var(--bg-alt); display:flex; align-items:center; justify-content:center;
+    font-size:2.4rem; position:relative; cursor:pointer;
+  }
+  .card .thumb .badges{ position:absolute; top:8px; left:8px; display:flex; flex-direction:column; gap:4px; }
+  .card .body{ padding:12px; display:flex; flex-direction:column; gap:4px; flex:1; }
+  .card .name{ font-size:.92rem; font-weight:600; cursor:pointer; }
+  .card .sub{ font-size:.75rem; color:var(--grey); }
+  .card .price{ color:var(--coral); font-weight:700; font-size:1rem; }
+  .card .rating{ color:var(--gold); font-size:.8rem; }
+  .card .actions{ display:flex; gap:6px; margin-top:6px; }
+  .card .fav{ background:none; border:1px solid var(--border); border-radius:var(--radius-sm); padding:8px 10px; }
+  .card .fav.active{ color:var(--coral); border-color:var(--coral); }
+
+  /* ---------- FilterPanel + Catálogo layout ---------- */
+  .catalog-layout{ display:grid; grid-template-columns:220px 1fr; gap:var(--space-4); }
+  .filter-panel{ background:var(--bg-alt); border-radius:var(--radius-md); padding:16px; height:fit-content; }
+  .filter-panel h3{ font-size:1rem; margin-bottom:10px; }
+  .filter-panel label{ display:block; font-size:.85rem; margin-bottom:6px; cursor:pointer; }
+  .catalog-toolbar{ display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:8px; }
+  .catalog-toolbar select{ padding:6px 10px; border-radius:var(--radius-sm); border:1px solid var(--border); }
+  .result-count{ font-size:.85rem; color:var(--grey); }
+
+  /* ---------- Pagination ---------- */
+  .pagination{ display:flex; justify-content:center; gap:6px; margin-top:24px; }
+  .pagination button{
+    border:1px solid var(--border); background:#fff; border-radius:var(--radius-sm); padding:6px 12px; font-size:.85rem;
+  }
+  .pagination button.active{ background:var(--navy); color:#fff; border-color:var(--navy); }
+
+  /* ---------- Detalle producto ---------- */
+  .detail{ display:grid; grid-template-columns:1fr 1fr; gap:var(--space-4); }
+  .detail .gallery{
+    background:var(--bg-alt); border-radius:var(--radius-md); height:320px; display:flex; align-items:center; justify-content:center;
+    font-size:5rem; position:relative;
+  }
+  .detail .info h2{ font-size:1.6rem; }
+  .detail .info .price{ font-size:1.6rem; color:var(--coral); font-weight:700; margin:8px 0; }
+  .detail .info .stock{ font-size:.85rem; margin-bottom:14px; }
+  .stock.low{ color:var(--coral); font-weight:700; }
+  .qty-selector{ display:flex; align-items:center; gap:10px; margin-bottom:16px; }
+  .qty-selector button{ width:32px; height:32px; border:1px solid var(--border); border-radius:var(--radius-sm); background:#fff; font-size:1rem; }
+  .breadcrumb{ font-size:.8rem; color:var(--grey); margin-bottom:14px; }
+  .breadcrumb a:hover{ color:var(--teal); }
+
+  /* ---------- Carrito ---------- */
+  .cart-layout{ display:grid; grid-template-columns:1fr 320px; gap:var(--space-4); align-items:start; }
+  .cart-row{
+    display:flex; gap:12px; align-items:center; padding:12px 0; border-bottom:1px solid var(--border);
+  }
+  .cart-row .thumb-sm{ width:56px; height:56px; background:var(--bg-alt); border-radius:var(--radius-sm); display:flex; align-items:center; justify-content:center; font-size:1.6rem; }
+  .cart-row .info{ flex:1; }
+  .cart-row .name{ font-weight:600; font-size:.9rem; }
+  .cart-row .unit{ font-size:.78rem; color:var(--grey); }
+  .cart-row .remove{ background:none; border:none; color:var(--grey); font-size:1rem; }
+  .cart-row .remove:hover{ color:var(--coral); }
+  .summary{
+    background:var(--bg-alt); border-radius:var(--radius-md); padding:18px; position:sticky; top:90px;
+  }
+  .summary .line{ display:flex; justify-content:space-between; font-size:.9rem; margin-bottom:8px; }
+  .summary .total{ font-weight:700; font-size:1.1rem; border-top:1px solid var(--border); padding-top:10px; margin-top:8px; }
+  .empty-state{ text-align:center; padding:60px 20px; color:var(--grey); }
+  .empty-state .icon{ font-size:3rem; margin-bottom:12px; }
+
+  /* ---------- Formularios (FormField) ---------- */
+  .form-field{ margin-bottom:var(--space-3); }
+  .form-field label{ display:block; font-size:.82rem; font-weight:600; margin-bottom:5px; }
+  .form-field input, .form-field select{
+    width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:var(--radius-sm); font-size:.9rem;
+  }
+  .form-field input:focus, .form-field select:focus{ outline:2px solid var(--teal); border-color:var(--teal); }
+  .form-field input.invalid{ border-color:var(--coral); }
+  .form-field .help{ font-size:.72rem; color:var(--grey); margin-top:4px; }
+  .form-field .help.error{ color:var(--coral); }
+  .form-row{ display:grid; grid-template-columns:1fr 1fr; gap:var(--space-3); }
+
+  .auth-card{
+    max-width:380px; margin:20px auto; background:#fff; border:1px solid var(--border); border-radius:var(--radius-md);
+    box-shadow:var(--shadow-card); padding:28px;
+  }
+  .auth-card h2{ text-align:center; margin-bottom:18px; }
+  .auth-switch{ text-align:center; font-size:.85rem; margin-top:14px; }
+  .auth-switch button{ background:none; border:none; color:var(--teal); font-weight:600; }
+
+  .checkout-layout{ display:grid; grid-template-columns:1fr 320px; gap:var(--space-4); align-items:start; }
+  .step-title{ display:flex; align-items:center; gap:8px; font-weight:700; color:var(--navy); margin:18px 0 10px; }
+  .step-title .n{ background:var(--navy); color:#fff; width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:.8rem; }
+  .pay-option{ display:flex; align-items:center; gap:8px; padding:10px; border:1px solid var(--border); border-radius:var(--radius-sm); margin-bottom:8px; cursor:pointer; }
+  .pay-option.selected{ border-color:var(--teal); background:rgba(11,123,138,.06); }
+
+  /* ---------- Mi Cuenta ---------- */
+  .account-layout{ display:grid; grid-template-columns:200px 1fr; gap:var(--space-4); }
+  .account-menu button{
+    display:block; width:100%; text-align:left; background:none; border:none; padding:10px 12px; border-radius:var(--radius-sm);
+    font-size:.88rem; margin-bottom:4px;
+  }
+  .account-menu button.active, .account-menu button:hover{ background:var(--bg-alt); color:var(--navy); font-weight:600; }
+  .order-card{ border:1px solid var(--border); border-radius:var(--radius-md); padding:14px; margin-bottom:12px; }
+  .order-card .top{ display:flex; justify-content:space-between; font-size:.85rem; margin-bottom:6px; }
+  .status{ padding:3px 10px; border-radius:12px; font-size:.72rem; font-weight:700; }
+  .status.entregado{ background:#dff5e1; color:#1e7d32; }
+  .status.enviado{ background:#e0f0fb; color:#0B7B8A; }
+  .status.pendiente{ background:#fdecd8; color:#a15c00; }
+
+  /* ---------- Modal ---------- */
+  .modal-overlay{
+    position:fixed; inset:0; background:rgba(0,0,0,.4); display:none; align-items:center; justify-content:center; z-index:100;
+  }
+  .modal-overlay.open{ display:flex; }
+  .modal{ background:#fff; border-radius:var(--radius-md); padding:22px; max-width:340px; text-align:center; box-shadow:var(--shadow-hover); }
+  .modal .actions{ display:flex; gap:10px; margin-top:16px; justify-content:center; }
+
+  /* ---------- Toast ---------- */
+  #toastWrap{ position:fixed; bottom:20px; right:20px; display:flex; flex-direction:column; gap:8px; z-index:200; }
+  .toast{
+    background:var(--navy); color:#fff; padding:12px 18px; border-radius:var(--radius-sm); font-size:.85rem;
+    box-shadow:var(--shadow-hover); animation:toastIn .2s ease-out;
+  }
+  .toast.success{ background:#1e7d32; }
+  .toast.error{ background:var(--coral); }
+  @keyframes toastIn{ from{ opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);} }
+
+  footer.site-footer{ background:var(--navy); color:#cfe0ea; padding:32px 24px; margin-top:40px; }
+  .footer-grid{ max-width:1100px; margin:0 auto; display:grid; grid-template-columns:repeat(3,1fr); gap:20px; font-size:.85rem; }
+  .footer-grid h4{ color:#fff; margin-bottom:8px; font-family:Arial; }
+
+  @media (max-width:760px){
+    .catalog-layout, .detail, .cart-layout, .checkout-layout, .account-layout{ grid-template-columns:1fr; }
+    .form-row{ grid-template-columns:1fr; }
+    .footer-grid{ grid-template-columns:1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ===================== NAVBAR (componente reutilizable) ===================== -->
+<header class="navbar">
+  <div class="logo">🎭 FUNKO STORE</div>
+  <div class="searchbox">
+    <input id="searchInput" type="text" placeholder="Buscar Funkos...">
+    <button onclick="doSearch()">🔍</button>
+  </div>
+  <div class="nav-icons">
+    <button class="icon-btn" onclick="navigate('catalogo')" title="Catálogo">📦</button>
+    <button class="icon-btn" onclick="navigate('carrito')" title="Carrito">🛒<span class="cart-count" id="cartCount">0</span></button>
+    <button class="icon-btn" onclick="navigate(state.user ? 'cuenta' : 'login')" title="Mi cuenta">👤</button>
+  </div>
+</header>
+<nav class="categories" id="catNav"></nav>
+
+<main id="app"></main>
+
+<footer class="site-footer">
+  <div class="footer-grid">
+    <div><h4>Funko Store</h4>E-commerce de Funkos Anime — Toei Animation | 2025</div>
+    <div><h4>Ayuda</h4>Envíos · Cambios y devoluciones · Preguntas frecuentes</div>
+    <div><h4>Newsletter</h4>Recibí novedades y lanzamientos exclusivos.</div>
+  </div>
+</footer>
+
+<!-- Modal reutilizable -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <p id="modalText"></p>
+    <div class="actions">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" id="modalConfirmBtn">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<div id="toastWrap"></div>
+
+<script>
+/* ============================================================
+   DATOS (simulan el catálogo — PRODUCTO / CATEGORIA del DER)
+   ============================================================ */
+const CATEGORIES = ["Todos","Dragon Ball","One Piece","Naruto","Bleach","Saint Seiya"];
+
+const PRODUCTS = [
+  {id:1, nombre:"Goku SSJ #889", cat:"Dragon Ball", precio:8500, stock:3, emoji:"🟠", exclusive:true, chase:false, rating:4},
+  {id:2, nombre:"Vegeta #1263", cat:"Dragon Ball", precio:24000, stock:1, emoji:"🔵", exclusive:false, chase:true, rating:5},
+  {id:3, nombre:"Luffy Gear 5 #1100", cat:"One Piece", precio:9800, stock:0, emoji:"🔴", exclusive:false, chase:false, rating:4},
+  {id:4, nombre:"Naruto Sabio #745", cat:"Naruto", precio:7600, stock:8, emoji:"🟡", exclusive:false, chase:false, rating:4},
+  {id:5, nombre:"Ichigo Bankai #512", cat:"Bleach", precio:8900, stock:5, emoji:"⚫", exclusive:false, chase:false, rating:3},
+  {id:6, nombre:"Seiya Pegaso #300", cat:"Saint Seiya", precio:11200, stock:2, emoji:"⭐", exclusive:true, chase:false, rating:5},
+  {id:7, nombre:"Zoro Three Swords #950", cat:"One Piece", precio:10400, stock:6, emoji:"🟢", exclusive:false, chase:false, rating:4},
+  {id:8, nombre:"Sasuke Susanoo #820", cat:"Naruto", precio:12900, stock:4, emoji:"🟣", exclusive:false, chase:true, rating:5},
+];
+
+/* ============================================================
+   ESTADO GLOBAL
+   ============================================================ */
+const state = {
+  view:"home",
+  catFilter:"Todos",
+  search:"",
+  page:1,
+  cart:[],          // {id, qty}
+  favs:new Set(),
+  user:null,        // {nombre,email}
+  detailId:null,
+  accountTab:"datos",
+  payMethod:"mercadopago",
+};
+
+/* ============================================================
+   COMPONENTES REUTILIZABLES (funciones que devuelven HTML)
+   ============================================================ */
+function Badge(type){
+  if(type==="chase") return `<span class="badge badge-chase">🏆 Chase</span>`;
+  if(type==="exclusive") return `<span class="badge badge-exclusive">Exclusive</span>`;
+  if(type==="nostock") return `<span class="badge badge-nostock">Sin stock</span>`;
+  return "";
+}
+
+function Rating(n){
+  return `<div class="rating">${"★".repeat(n)}${"☆".repeat(5-n)}</div>`;
+}
+
+function ProductCard(p){
+  const isFav = state.favs.has(p.id);
+  return `
+    <div class="card">
+      <div class="thumb" onclick="viewDetail(${p.id})">
+        <div class="badges">${p.exclusive?Badge("exclusive"):""}${p.chase?Badge("chase"):""}${p.stock===0?Badge("nostock"):""}</div>
+        ${p.emoji}
+      </div>
+      <div class="body">
+        <div class="name" onclick="viewDetail(${p.id})">${p.nombre}</div>
+        <div class="sub">Funko Pop! ${p.cat}</div>
+        ${Rating(p.rating)}
+        <div class="price">$ ${p.precio.toLocaleString('es-AR')}</div>
+        <div class="actions">
+          ${p.stock>0
+            ? `<button class="btn btn-primary" style="flex:1" onclick="addToCart(${p.id})">+ Carrito</button>`
+            : `<button class="btn btn-secondary" style="flex:1" disabled>Avisar</button>`}
+          <button class="fav ${isFav?'active':''}" onclick="toggleFav(${p.id})">${isFav?'♥':'♡'}</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function QuantitySelector(id, qty, max){
+  return `
+    <div class="qty-selector">
+      <button onclick="changeQty(${id}, -1)" ${qty<=1?'disabled':''}>−</button>
+      <span>${qty}</span>
+      <button onclick="changeQty(${id}, 1)" ${qty>=max?'disabled':''}>+</button>
+    </div>`;
+}
+
+function FormField({label, id, type="text", placeholder="", help="", invalid=false}){
+  return `
+    <div class="form-field">
+      <label for="${id}">${label}</label>
+      <input class="${invalid?'invalid':''}" type="${type}" id="${id}" placeholder="${placeholder}">
+      ${help ? `<div class="help ${invalid?'error':''}">${help}</div>` : ""}
+    </div>`;
+}
+
+function Toast(msg, type="info"){
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.textContent = msg;
+  document.getElementById('toastWrap').appendChild(el);
+  setTimeout(()=> el.remove(), 2600);
+}
+
+function openModal(text, onConfirm){
+  document.getElementById('modalText').textContent = text;
+  document.getElementById('modalOverlay').classList.add('open');
+  document.getElementById('modalConfirmBtn').onclick = () => { onConfirm(); closeModal(); };
+}
+function closeModal(){ document.getElementById('modalOverlay').classList.remove('open'); }
+
+/* ============================================================
+   NAVEGACIÓN
+   ============================================================ */
+function navigate(view){
+  state.view = view;
+  window.scrollTo({top:0, behavior:'smooth'});
+  render();
+}
+
+function viewDetail(id){ state.detailId = id; navigate('detalle'); }
+
+function renderCatNav(){
+  document.getElementById('catNav').innerHTML = CATEGORIES.map(c => `
+    <button class="${state.catFilter===c?'active':''}" onclick="filterCat('${c}')">${c}</button>
+  `).join('');
+}
+function filterCat(c){ state.catFilter=c; state.page=1; navigate('catalogo'); }
+
+function doSearch(){
+  state.search = document.getElementById('searchInput').value.trim();
+  state.page = 1;
+  navigate('catalogo');
+}
+
+/* ============================================================
+   CARRITO
+   ============================================================ */
+function addToCart(id){
+  const item = state.cart.find(c=>c.id===id);
+  const prod = PRODUCTS.find(p=>p.id===id);
+  if(item){ if(item.qty < prod.stock) item.qty++; }
+  else state.cart.push({id, qty:1});
+  updateCartCount();
+  Toast(`${prod.nombre} agregado al carrito`, "success");
+  if(state.view==='detalle'||state.view==='carrito') render();
+}
+function changeQty(id, delta){
+  const item = state.cart.find(c=>c.id===id);
+  if(!item) return;
+  item.qty += delta;
+  if(item.qty<1) item.qty=1;
+  render();
+}
+function removeFromCart(id){
+  const prod = PRODUCTS.find(p=>p.id===id);
+  openModal(`¿Eliminar "${prod.nombre}" del carrito?`, ()=>{
+    state.cart = state.cart.filter(c=>c.id!==id);
+    updateCartCount();
+    render();
+    Toast("Producto eliminado", "info");
+  });
+}
+function toggleFav(id){
+  if(state.favs.has(id)) state.favs.delete(id); else state.favs.add(id);
+  render();
+}
+function updateCartCount(){
+  document.getElementById('cartCount').textContent = state.cart.reduce((a,c)=>a+c.qty,0);
+}
+function cartTotal(){
+  return state.cart.reduce((sum,c)=>{
+    const p = PRODUCTS.find(pr=>pr.id===c.id);
+    return sum + p.precio*c.qty;
+  },0);
+}
+
+/* ============================================================
+   VISTAS
+   ============================================================ */
+function ViewHome(){
+  const destacados = PRODUCTS.slice(0,4);
+  return `
+    <div class="hero">
+      <h1>Nueva colección Anime 2025</h1>
+      <p>Dragon Ball · One Piece · Naruto · Bleach · Saint Seiya</p>
+      <button class="btn btn-primary" onclick="navigate('catalogo')">Ver catálogo</button>
+    </div>
+    <h2 style="margin-bottom:16px;">Destacados</h2>
+    <div class="grid">${destacados.map(ProductCard).join('')}</div>
+  `;
+}
+
+function ViewCatalogo(){
+  let list = PRODUCTS.filter(p => state.catFilter==="Todos" || p.cat===state.catFilter);
+  if(state.search) list = list.filter(p => p.nombre.toLowerCase().includes(state.search.toLowerCase()));
+
+  const perPage = 4;
+  const pages = Math.max(1, Math.ceil(list.length/perPage));
+  if(state.page>pages) state.page=pages;
+  const shown = list.slice((state.page-1)*perPage, state.page*perPage);
+
+  return `
+    <div class="catalog-layout">
+      <aside class="filter-panel">
+        <h3>Filtros</h3>
+        <div style="margin-bottom:16px;">
+          <strong style="font-size:.85rem;">Categoría</strong><br>
+          ${CATEGORIES.filter(c=>c!=="Todos").map(c=>`
+            <label><input type="checkbox" ${state.catFilter===c?'checked':''} onchange="filterCat('${state.catFilter===c?'Todos':c}')"> ${c}</label>
+          `).join('')}
+        </div>
+        <div>
+          <strong style="font-size:.85rem;">Tipo</strong><br>
+          <label><input type="checkbox"> Exclusive</label>
+          <label><input type="checkbox"> Chase</label>
+        </div>
+      </aside>
+      <div>
+        <div class="catalog-toolbar">
+          <span class="result-count">${list.length} Funkos encontrados${state.search?` para "${state.search}"`:''}</span>
+          <select onchange="alert('Orden simulado: '+this.value)">
+            <option>Ordenar: Relevancia</option>
+            <option>Precio: menor a mayor</option>
+            <option>Precio: mayor a menor</option>
+            <option>Más nuevos</option>
+          </select>
+        </div>
+        <div class="grid">${shown.length ? shown.map(ProductCard).join('') : '<p>No se encontraron productos.</p>'}</div>
+        <div class="pagination">
+          ${Array.from({length:pages},(_,i)=>i+1).map(n=>`
+            <button class="${state.page===n?'active':''}" onclick="goPage(${n})">${n}</button>
+          `).join('')}
+        </div>
+      </div>
+    </div>
+  `;
+}
+function goPage(n){ state.page=n; render(); }
+
+function ViewDetalle(){
+  const p = PRODUCTS.find(pr=>pr.id===state.detailId) || PRODUCTS[0];
+  const inCart = state.cart.find(c=>c.id===p.id);
+  const qty = inCart ? inCart.qty : 1;
+  return `
+    <div class="breadcrumb"><a href="#" onclick="navigate('home')">Inicio</a> &gt; <a href="#" onclick="navigate('catalogo')">Catálogo</a> &gt; ${p.cat} &gt; ${p.nombre}</div>
+    <div class="detail">
+      <div class="gallery">
+        ${p.exclusive?Badge("exclusive"):""}${p.chase?Badge("chase"):""}
+        <span style="position:absolute;">${p.emoji}</span>
+      </div>
+      <div class="info">
+        <h2>${p.nombre}</h2>
+        <div class="sub" style="color:var(--grey);margin-bottom:6px;">Funko Pop! ${p.cat}</div>
+        ${Rating(p.rating)}
+        <div class="price">$ ${p.precio.toLocaleString('es-AR')}</div>
+        <div class="stock ${p.stock>0 && p.stock<5 ? 'low':''}">${p.stock>0 ? `Stock: ${p.stock} unidades` : 'Sin stock disponible'}</div>
+        ${p.stock>0 ? `
+          <div id="qtyWrap">${QuantitySelector(p.id, qty, p.stock)}</div>
+          <button class="btn btn-primary btn-block" style="margin-bottom:10px;" onclick="addToCart(${p.id})">🛒 Agregar al carrito</button>
+        ` : `<button class="btn btn-secondary btn-block" style="margin-bottom:10px;" disabled>Avisar cuando llegue</button>`}
+        <button class="btn btn-secondary btn-block" onclick="toggleFav(${p.id})">${state.favs.has(p.id)?'♥ En favoritos':'♡ Agregar a favoritos'}</button>
+      </div>
+    </div>
+  `;
+}
+
+function ViewCarrito(){
+  if(state.cart.length===0){
+    return `<div class="empty-state"><div class="icon">🛒</div><p>Tu carrito está vacío.</p>
+      <button class="btn btn-primary" onclick="navigate('catalogo')">Ir al catálogo</button></div>`;
+  }
+  const rows = state.cart.map(c=>{
+    const p = PRODUCTS.find(pr=>pr.id===c.id);
+    return `
+      <div class="cart-row">
+        <div class="thumb-sm">${p.emoji}</div>
+        <div class="info">
+          <div class="name">${p.nombre}</div>
+          <div class="unit">Precio unit: $ ${p.precio.toLocaleString('es-AR')}</div>
+        </div>
+        ${QuantitySelector(p.id, c.qty, p.stock)}
+        <div style="font-weight:700;min-width:70px;text-align:right;">$ ${(p.precio*c.qty).toLocaleString('es-AR')}</div>
+        <button class="remove" onclick="removeFromCart(${p.id})">🗑</button>
+      </div>`;
+  }).join('');
+  const subtotal = cartTotal();
+  const envio = subtotal>0 ? 1500 : 0;
+  return `
+    <h2 style="margin-bottom:16px;">Mi Carrito (${state.cart.reduce((a,c)=>a+c.qty,0)} productos)</h2>
+    <div class="cart-layout">
+      <div>${rows}
+        <button class="btn btn-secondary" style="margin-top:14px;" onclick="navigate('catalogo')">← Seguir comprando</button>
+      </div>
+      <div class="summary">
+        <h3 style="font-size:1rem;margin-bottom:12px;">Resumen</h3>
+        <div class="line"><span>Subtotal</span><span>$ ${subtotal.toLocaleString('es-AR')}</span></div>
+        <div class="line"><span>Envío</span><span>$ ${envio.toLocaleString('es-AR')}</span></div>
+        <div class="line total"><span>Total</span><span>$ ${(subtotal+envio).toLocaleString('es-AR')}</span></div>
+        <button class="btn btn-primary btn-block" style="margin-top:10px;" onclick="navigate(state.user?'checkout':'login')">Finalizar compra</button>
+      </div>
+    </div>
+  `;
+}
+
+function ViewCheckout(){
+  if(state.cart.length===0){ navigate('carrito'); return ''; }
+  const subtotal = cartTotal(); const envio = 1500;
+  const methods = [
+    {id:'tarjeta', label:'Tarjeta de crédito/débito'},
+    {id:'mercadopago', label:'MercadoPago'},
+    {id:'transferencia', label:'Transferencia bancaria'},
+  ];
+  return `
+    <h2 style="margin-bottom:10px;">Checkout</h2>
+    <div class="checkout-layout">
+      <div>
+        <div class="step-title"><span class="n">1</span> Datos de envío</div>
+        ${FormField({label:"Nombre completo", id:"ckNombre", placeholder:"Juan Pérez"})}
+        <div class="form-row">
+          ${FormField({label:"Dirección", id:"ckDireccion", placeholder:"Av. Siempre Viva 742"})}
+          ${FormField({label:"Código postal", id:"ckCP", placeholder:"1900"})}
+        </div>
+        <div class="step-title"><span class="n">2</span> Método de pago</div>
+        ${methods.map(m=>`
+          <div class="pay-option ${state.payMethod===m.id?'selected':''}" onclick="selectPay('${m.id}')">
+            <input type="radio" name="pay" ${state.payMethod===m.id?'checked':''}> ${m.label}
+          </div>
+        `).join('')}
+      </div>
+      <div class="summary">
+        <h3 style="font-size:1rem;margin-bottom:12px;">Resumen del pedido</h3>
+        ${state.cart.map(c=>{
+          const p=PRODUCTS.find(pr=>pr.id===c.id);
+          return `<div class="line"><span>${p.nombre} x${c.qty}</span><span>$ ${(p.precio*c.qty).toLocaleString('es-AR')}</span></div>`;
+        }).join('')}
+        <div class="line"><span>Envío</span><span>$ ${envio.toLocaleString('es-AR')}</span></div>
+        <div class="line total"><span>Total</span><span>$ ${(subtotal+envio).toLocaleString('es-AR')}</span></div>
+        <button class="btn btn-primary btn-block" style="margin-top:10px;" onclick="confirmOrder()">Confirmar pedido</button>
+      </div>
+    </div>
+  `;
+}
+function selectPay(id){ state.payMethod=id; render(); }
+function confirmOrder(){
+  state.cart = [];
+  updateCartCount();
+  Toast("¡Pedido confirmado! Te enviamos un email.", "success");
+  navigate('home');
+}
+
+function ViewLogin(){
+  return `
+    <div class="auth-card">
+      <h2>Iniciar sesión</h2>
+      ${FormField({label:"Email", id:"logEmail", type:"email", placeholder:"tu@email.com"})}
+      ${FormField({label:"Contraseña", id:"logPass", type:"password", placeholder:"••••••••"})}
+      <button class="btn btn-primary btn-block" onclick="doLogin()">Ingresar</button>
+      <div class="auth-switch">¿No tenés cuenta? <button onclick="navigate('registro')">Crear cuenta</button></div>
+    </div>
+  `;
+}
+function ViewRegistro(){
+  return `
+    <div class="auth-card">
+      <h2>Crear cuenta</h2>
+      ${FormField({label:"Nombre", id:"regNombre", placeholder:"Juan Pérez"})}
+      ${FormField({label:"Email", id:"regEmail", type:"email", placeholder:"tu@email.com"})}
+      ${FormField({label:"Contraseña", id:"regPass", type:"password", placeholder:"Mínimo 8 caracteres"})}
+      <button class="btn btn-primary btn-block" onclick="doLogin()">Crear cuenta</button>
+      <div class="auth-switch">¿Ya tenés cuenta? <button onclick="navigate('login')">Iniciar sesión</button></div>
+    </div>
+  `;
+}
+function doLogin(){
+  state.user = {nombre:"Juan Pérez", email:"juan@mail.com"};
+  Toast(`¡Bienvenido, ${state.user.nombre}!`, "success");
+  navigate('cuenta');
+}
+
+function ViewCuenta(){
+  if(!state.user){ navigate('login'); return ''; }
+  const tabs = [
+    {id:'datos', label:'Mis Datos'},
+    {id:'pedidos', label:'Mis Pedidos'},
+    {id:'favoritos', label:'Favoritos'},
+  ];
+  let content = '';
+  if(state.accountTab==='datos'){
+    content = `
+      ${FormField({label:"Nombre", id:"accNombre", placeholder:state.user.nombre})}
+      ${FormField({label:"Email", id:"accEmail", type:"email", placeholder:state.user.email})}
+      <button class="btn btn-primary" onclick="Toast('Datos actualizados','success')">Guardar cambios</button>`;
+  } else if(state.accountTab==='pedidos'){
+    const pedidos = [
+      {id:1023, estado:'entregado', total:24000},
+      {id:1031, estado:'enviado', total:9800},
+      {id:1042, estado:'pendiente', total:34000},
+    ];
+    content = pedidos.map(o=>`
+      <div class="order-card">
+        <div class="top"><strong>Pedido #${o.id}</strong><span class="status ${o.estado}">${o.estado}</span></div>
+        <div>Total: $ ${o.total.toLocaleString('es-AR')}</div>
+      </div>`).join('');
+  } else {
+    const favs = PRODUCTS.filter(p=>state.favs.has(p.id));
+    content = favs.length ? `<div class="grid">${favs.map(ProductCard).join('')}</div>` : `<p>Todavía no agregaste favoritos.</p>`;
+  }
+  return `
+    <div class="account-layout">
+      <div class="account-menu">
+        ${tabs.map(t=>`<button class="${state.accountTab===t.id?'active':''}" onclick="setAccTab('${t.id}')">${t.label}</button>`).join('')}
+        <button onclick="logout()">Cerrar sesión</button>
+      </div>
+      <div>${content}</div>
+    </div>
+  `;
+}
+function setAccTab(id){ state.accountTab=id; render(); }
+function logout(){ state.user=null; navigate('home'); }
+
+/* ============================================================
+   RENDER PRINCIPAL
+   ============================================================ */
+function render(){
+  renderCatNav();
+  const views = {
+    home: ViewHome, catalogo: ViewCatalogo, detalle: ViewDetalle,
+    carrito: ViewCarrito, checkout: ViewCheckout, login: ViewLogin,
+    registro: ViewRegistro, cuenta: ViewCuenta,
+  };
+  document.getElementById('app').innerHTML = (views[state.view] || ViewHome)();
+  updateCartCount();
+}
+
+render();
+</script>
+
+</body>
+</html>
